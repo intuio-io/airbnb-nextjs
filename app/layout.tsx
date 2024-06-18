@@ -4,8 +4,9 @@ import "./globals.css";
 
 // components
 import Navbar from "./components/Navbar/Navbar";
-import ClientOnly from "./components/ClientOnly";
 import RegisterModal from "./components/modals/RegisterModal";
+import LoginModal from "./components/modals/LoginModal";
+
 
 // providers
 import ToasterProvider from "./providers/ToasterProvider";
@@ -18,19 +19,21 @@ export const metadata: Metadata = {
 };
 
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
   return (
     <html lang="en">
       <body className={font.className}>
-        <ClientOnly>
+
           <ToasterProvider/>
+          <LoginModal/>
           <RegisterModal/>
           <Navbar/>
-        </ClientOnly>
+ 
     
         {children}
         </body>

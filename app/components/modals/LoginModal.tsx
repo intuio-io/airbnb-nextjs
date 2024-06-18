@@ -1,6 +1,5 @@
 'use client';
 import React, {useCallback, useState} from 'react'
-import axios from 'axios';
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import toast from 'react-hot-toast';
 
@@ -21,14 +20,14 @@ import Button from '../Button';
 // utils
 import axiosClient from '@/app/utils/axios-client';
 
-const RegisterModal = () => {
+const LoginModal = () => {
+
   const registerModal  = useRegisterModal();
   const loginModal = useLoginModal();
   const [isLoading, setIsLoading] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm<FieldValues>({
     defaultValues: {
-      name: '',
       email: '',
       password: ''
     }
@@ -37,14 +36,15 @@ const RegisterModal = () => {
   const onSubmit: SubmitHandler<FieldValues> = (data) => {
     setIsLoading(true);
 
-    axiosClient.post('/auth/register', data)
+    axiosClient.post('/auth/signin', data)
       .then(({data}) => {
         localStorage.setItem("ACCESS_TOKEN", data.token);
-        registerModal.onClose();
         toast.success('Logged in successfully!');
+        loginModal.onClose();
+        setTimeout(() => location.reload(), 300);
       })
       .catch((error) => {
-        toast.error('Something went wrong, maybe email already exists!');
+        toast.error('Something went wrong');
       })
       .finally(() => {
         setIsLoading(false);
@@ -54,21 +54,13 @@ const RegisterModal = () => {
   const bodyContent = (
     <div className='flex flex-col gap-4'>
       <Heading 
-      title="Welcome to Airbnb" 
-      subtitle='Create an account!'
+      title="Welcome back" 
+      subtitle='Login to your account!'
        />
 
       <Input 
         id="email" 
         label="Email" 
-        disabled={isLoading} 
-        register={register} 
-        errors={errors}
-        required />
-
-      <Input 
-        id="name" 
-        label="Name" 
         disabled={isLoading} 
         register={register} 
         errors={errors}
@@ -93,9 +85,9 @@ const RegisterModal = () => {
       <div className='text-neutral-500 text-center mt-4 font-light'>
         <div className='justify-center flex flex-row items-center gap-2'>
           <div>
-            Already have an account?
+            Don't have an account?
           </div>
-          <div onClick={() => {registerModal.onClose(); loginModal.onOpen()}} className='text-neutral-800 cursor-pointer hover:underline'>
+          <div onClick={() => {loginModal.onClose(); registerModal.onOpen()}} className='text-neutral-800 cursor-pointer hover:underline'>
             Log in
           </div>
         </div>
@@ -106,14 +98,14 @@ const RegisterModal = () => {
   return (
     <Modal 
       disabled={isLoading} 
-        isOpen={registerModal.isOpen}
-        title="Register"
+        isOpen={loginModal.isOpen}
+        title="Login"
         actionLabel="Continue"
-        onClose={registerModal.onClose}
+        onClose={loginModal.onClose}
         onSubmit={handleSubmit(onSubmit)}
         body={bodyContent}
         footer={footerContent}/>
   )
 }
 
-export default RegisterModal
+export default LoginModal
