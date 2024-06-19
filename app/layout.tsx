@@ -6,6 +6,7 @@ import "./globals.css";
 import Navbar from "./components/Navbar/Navbar";
 import RegisterModal from "./components/modals/RegisterModal";
 import LoginModal from "./components/modals/LoginModal";
+import RentModal from "./components/modals/RentModal";
 
 
 // providers
@@ -30,6 +31,7 @@ export default async function RootLayout({
       <body className={font.className}>
 
           <ToasterProvider/>
+          <RentModal/>
           <LoginModal/>
           <RegisterModal/>
           <Navbar/>
