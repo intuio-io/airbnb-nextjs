@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react';
 import axiosClient from '../utils/axios-client';
 
-function useCurrentUser() {
+interface CurrentUser {
+  id: string;
+  name: string;
+  email: string; 
+}
+
+
+function useCurrentUser(): CurrentUser | null {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
