@@ -10,6 +10,11 @@ import { IconType } from 'react-icons';
 
 // hooks
 import useCountries from '@/app/hooks/useCountries';
+import dynamic from 'next/dynamic';
+
+const Map = dynamic(() => import('../Map'), {
+    ssr: false
+});
 
 interface ListingInfoProps {
     user: any;
@@ -64,6 +69,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({ user, description, guestCount
         {description}
       </div>
       <hr/>
+      <Map center={coordinates} />
     </div>
   )
 }

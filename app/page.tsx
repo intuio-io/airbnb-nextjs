@@ -1,7 +1,9 @@
 'use client';
 import { useState, useEffect } from "react";
+// import { Status, Wrapper } from '@googlemaps/react-wrapper';
 
 // components
+// import GoogleMap from "./components/GoogleMap";
 import EmptyState from "./components/EmptyState";
 import Container from "./components/Container";
 import ListingCard from "./components/listings/ListingCard";
@@ -49,6 +51,12 @@ export default function Home() {
             data={listing}
           />
         })}
+
+        {/* <div>
+        <Wrapper apiKey={"AIzaSyBs-qVUie4dglZmVZsPJ4vJ-VkGT8VaXks"} render={ (status: Status) => (<h1>{status}</h1>)}>
+        <GoogleMap />
+      </Wrapper>
+        </div> */}
       </div>
     </Container>
   );

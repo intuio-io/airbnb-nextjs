@@ -11,6 +11,7 @@ import ListingClient from './ListingClient';
 
 // hooks
 import useCurrentUser from '@/app/hooks/useCurrentUser';
+import useGetReservations from '@/app/hooks/useGetReservations';
 
 interface IParams {
     listingId?: string;
@@ -18,14 +19,14 @@ interface IParams {
 
 const page = ({params}: {params: IParams}) => {
     const currentUser = useCurrentUser();
+    const { reservations } = useGetReservations(params);
     const [listing, setListing] = useState([]);
     const [loading, setLoading] = useState(false);
-
-
 
     useEffect(() => {
         const fetchListingDetail = async () => {
             try {
+                setLoading(true);
                 const response = await axiosClient.get(`/listing/${params.listingId}`);
                 setListing(response.data);
             } catch (error) {
@@ -47,7 +48,7 @@ const page = ({params}: {params: IParams}) => {
     }
 
   return (
-    <ListingClient listing={listing} currentUser={currentUser}/>
+    <ListingClient listing={listing} reservations={reservations} currentUser={currentUser}/>
   )
 }
 

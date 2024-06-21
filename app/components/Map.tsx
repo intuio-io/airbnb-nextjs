@@ -30,11 +30,11 @@ export type CountrySelectValue = {
 
 interface MapProps {
     center?: number [];
-    location: CountrySelectValue;
-    onChange: (value: CountrySelectValue) => void;
+    location?: CountrySelectValue | undefined;
+    onChange?: (value: CountrySelectValue) => void;
 }
 
-const handleMarkerDragEnd =  async (e: L.DragEndEvent, location: CountrySelectValue, onChange: (value: CountrySelectValue) => void) => {
+const handleMarkerDragEnd =  async (e: L.DragEndEvent, location?: CountrySelectValue, onChange?: (value: CountrySelectValue) => void) => {
   const newLatlng = e.target.getLatLng();
 
   const data = await  reverseGeocode(newLatlng.lat, newLatlng.lng);
@@ -48,7 +48,7 @@ const handleMarkerDragEnd =  async (e: L.DragEndEvent, location: CountrySelectVa
       };
 
 
-    onChange(updatedLocation as CountrySelectValue)
+    onChange?.(updatedLocation as CountrySelectValue)
 };
 
 
@@ -63,7 +63,7 @@ const Map: React.FC<MapProps> = ({center, location, onChange}) => {
       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
     />
     {center && (
-        <Marker position={center as L.LatLngExpression} draggable={true} eventHandlers={{
+        <Marker position={center as L.LatLngExpression} draggable={location ? true : false} eventHandlers={{
           dragend: (e) => handleMarkerDragEnd(e, location, onChange)}}/>
     )}
     </MapContainer>
