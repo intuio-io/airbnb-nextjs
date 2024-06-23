@@ -3,7 +3,9 @@ import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import toast from "react-hot-toast";
 
+// hooks
 import useLoginModal from "./useLoginModal";
+import useHomeStore from "../store/homeStore";
 
 interface IUserFavorite {
     listingId: string;
@@ -13,6 +15,7 @@ interface IUserFavorite {
 const useFavorite = ({listingId, currentUser}: IUserFavorite) => {
     const router = useRouter();
     const loginModal = useLoginModal();
+    const { addFavoriteId, removeFavoriteId } = useHomeStore();
 
     const hasFavorited = useMemo(() => {
         const list = currentUser?.favoriteIds || [];
@@ -31,14 +34,18 @@ const useFavorite = ({listingId, currentUser}: IUserFavorite) => {
             let request;
 
             if (hasFavorited) {
-                request = () => axiosClient.delete(`/auth/removeFavorite/${listingId}`)
-            } else {
-                request = () => axiosClient.post(`/auth/addFavorite/${listingId}`)
-            }
+                request = axiosClient.delete(`/auth/removeFavorite/${listingId}`)
+                  .then(() => removeFavoriteId(listingId));
+              } else {
+                request = axiosClient.post(`/auth/addFavorite/${listingId}`)
+                  .then(() => addFavoriteId(listingId));
+              }
 
-            await request();
-            location.reload();
+            await request;
+
+
             toast.success('Success');
+
         } catch (error) {
             toast.error("Something went wrong")
         }

@@ -8,13 +8,13 @@ import { useState, useEffect, useRef } from "react";
 import EmptyState from "./components/EmptyState";
 import Container from "./components/Container";
 import ListingCard from "./components/listings/ListingCard";
+import ListingLoader from "./components/listings/ListingLoader";
 
-// utils
-import axiosClient from "./utils/axios-client";
-import toast from "react-hot-toast";
+// actions
+import { getListings } from "./store/actions/listingActions";
 
 // hooks
-import useCurrentUser from "./hooks/useCurrentUser";
+import useHomeStore from "./store/homeStore";
 
 // keep this on top
 // const center = {
@@ -22,11 +22,21 @@ import useCurrentUser from "./hooks/useCurrentUser";
 //   lng: 73.6770293
 // };
 
-export default function Home() {
-  const currentUser = useCurrentUser();
+interface IListingsParams {
+  userId?: string;
+}
+
+interface HomeProps {
+  searchParams: IListingsParams;
+}
+
+const Home = ({searchParams}: HomeProps) => {
+  const { user } = useHomeStore();
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isEmpty, setIsEmpty] = useState(true);
+  const [isLoadingFinished, setIsLoadingFinished] = useState(false);
+  const loadingTime = Number(process.env.NEXT_PUBLIC_LOADING_TIME) || 1000;
 
   // const [showPopup, setShowPopup] = useState(false);
   // const [mapBounds, setMapBounds] = useState(null);
@@ -70,26 +80,34 @@ export default function Home() {
   // );
   
   useEffect(() => {
-    const fetchListings = async () => {
-      try {
-        const response = await axiosClient.get('/listing/getListings');
-        setListings(response.data);
-        setIsEmpty(!(response.data.length > 0));
-      } catch (error) {
-        toast.error('Error fetching listing');
-      } finally {
-        setLoading(false);
-      }
-    };
+    const fetchDetails = async () => {
+      const params = searchParams;
+      const data = await getListings({setLoading, params});
+      setListings(data);
+      setIsEmpty(!(data.length > 0));
+    }
 
-    fetchListings();
-  }, []);
+    fetchDetails();
+  }, [searchParams]);
+
+  // just to give the loader a cool effect
+  useEffect(() => {
+    if (!loading) {
+      const timeout = setTimeout(() => {
+        setIsLoadingFinished(true);
+      }, loadingTime); 
+
+      return () => clearTimeout(timeout);
+    }
+  }, [loading]);
+
+  if(loading || !isLoadingFinished) {
+    return ( <ListingLoader count={9}/> )
+  }
 
   if(isEmpty) {
     return <EmptyState showReset/>
   }
-
-
 
 
   // const markers = [
@@ -127,7 +145,7 @@ export default function Home() {
       <div className="pt-24 grid grid-cols-1  sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-8">
         {listings.map((listing: any) => {
           return <ListingCard
-            currentUser={currentUser}
+            currentUser={user}
             key={listing.id}
             data={listing}
           />
@@ -171,3 +189,5 @@ export default function Home() {
     </Container>
   );
 }
+
+export default Home;

@@ -15,8 +15,8 @@ import ImageUpload from '../inputs/ImageUpload';
 import Input from '../inputs/Input';
 
 // hooks
+import useHomeStore from '@/app/store/homeStore';
 import useRentModal from '@/app/hooks/useRentModal';
-import useCurrentUser from '@/app/hooks/useCurrentUser';
 
 // utils
 import axiosClient from '@/app/utils/axios-client';
@@ -31,7 +31,7 @@ enum STEPS {
 }
 
 const RentModal = () => {
-    const currentUser = useCurrentUser();
+    const { user } = useHomeStore();
     const rentModal = useRentModal();
 
     const [step, setStep] = useState(STEPS.CATEGORY);
@@ -96,7 +96,7 @@ const RentModal = () => {
         };
     
         setIsLoading(true);
-        axiosClient.post('/listing/addListing', {...parsedData, userId: currentUser?.id })
+        axiosClient.post('/listing/addListing', {...parsedData, userId: user?.id })
            .then(({ data }) => {
                 toast.success(data.message);
                 reset();

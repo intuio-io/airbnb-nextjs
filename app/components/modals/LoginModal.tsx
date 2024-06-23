@@ -1,5 +1,5 @@
 'use client';
-import React, {useCallback, useState} from 'react'
+import React, { useState } from 'react'
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import toast from 'react-hot-toast';
 
@@ -20,35 +20,42 @@ import Button from '../Button';
 // utils
 import axiosClient from '@/app/utils/axios-client';
 
-const LoginModal = () => {
+// actions
+import { getCurrentUser } from '@/app/store/actions/authActions';
 
+// hooks
+import useHomeStore from '@/app/store/homeStore';
+
+const LoginModal = () => {
+  const { addUser } = useHomeStore();
   const registerModal  = useRegisterModal();
   const loginModal = useLoginModal();
   const [isLoading, setIsLoading] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FieldValues>({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<FieldValues>({
     defaultValues: {
       email: '',
       password: ''
     }
   });
 
-  const onSubmit: SubmitHandler<FieldValues> = (data) => {
+  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     setIsLoading(true);
-
-    axiosClient.post('/auth/signin', data)
-      .then(({data}) => {
-        localStorage.setItem("ACCESS_TOKEN", data.token);
-        toast.success('Logged in successfully!');
-        loginModal.onClose();
-        setTimeout(() => location.reload(), 300);
-      })
-      .catch((error) => {
-        toast.error('Something went wrong');
-      })
-      .finally(() => {
-        setIsLoading(false);
-      })
+  
+    try {
+      const response = await axiosClient.post('/auth/signin', data);
+      localStorage.setItem("ACCESS_TOKEN", response.data.token);
+  
+      const userDetails = await getCurrentUser();
+      addUser(userDetails);
+      toast.success('Logged in successfully!');
+      reset();
+      loginModal.onClose();
+    } catch (error) {
+      toast.error('Something went wrong');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const bodyContent = (

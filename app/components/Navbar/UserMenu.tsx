@@ -11,6 +11,7 @@ import Avatar from '../Avatar';
 import MenuItem from './MenuItem';
 
 // hooks
+import useHomeStore from '@/app/store/homeStore';
 import useRegisterModal from '@/app/hooks/useRegisterModal';
 import useLoginModal from '@/app/hooks/useLoginModal';
 import useRentModal from '@/app/hooks/useRentModal';
@@ -24,6 +25,7 @@ interface UserMenuProps {
 
 const UserMenu: React.FC<UserMenuProps> = ({currentUser}) => {
     const router = useRouter();
+    const { reset } = useHomeStore(); 
     const registerModal = useRegisterModal();
     const loginModal = useLoginModal();
     const rentModal = useRentModal();
@@ -38,7 +40,8 @@ const UserMenu: React.FC<UserMenuProps> = ({currentUser}) => {
             {
                 localStorage.removeItem("ACCESS_TOKEN");
                 toast.success(data?.message);
-                setTimeout(() => location.reload(), 300);
+                reset();
+                router.push("/");
             }).catch((error) => {
                 localStorage.removeItem("ACCESS_TOKEN");
                 toast.error("Something went wrong")
@@ -74,9 +77,9 @@ const UserMenu: React.FC<UserMenuProps> = ({currentUser}) => {
                   { currentUser ? (
                   <>
                       <MenuItem onClick={() => router.push("/trips")} label="My trips"/>
-                      <MenuItem onClick={() => {}} label="My favorites"/>
-                      <MenuItem onClick={() => {}} label="My reservations"/>
-                      <MenuItem onClick={() => {}} label="My properties"/>
+                      <MenuItem onClick={() => router.push("/favorites")} label="My favorites"/>
+                      <MenuItem onClick={() => router.push("/reservations")} label="My reservations"/>
+                      <MenuItem onClick={() => router.push("/properties")} label="My properties"/>
                       <MenuItem onClick={rentModal.onOpen} label="Airbnb my home"/>
                       <hr/>
                       <MenuItem onClick={() => logout()} label="Logout"/>

@@ -1,5 +1,5 @@
 'use client';
-import React, {useCallback, useState} from 'react'
+import React, {useState} from 'react'
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import toast from 'react-hot-toast';
 
@@ -7,7 +7,11 @@ import toast from 'react-hot-toast';
 import { AiFillGithub } from 'react-icons/ai';
 import { FcGoogle } from 'react-icons/fc';
 
+// actions
+import { getCurrentUser } from '@/app/store/actions/authActions';
+
 // hooks
+import useHomeStore from '@/app/store/homeStore';
 import useRegisterModal from '@/app/hooks/useRegisterModal';
 import useLoginModal from '@/app/hooks/useLoginModal';
 
@@ -21,11 +25,12 @@ import Button from '../Button';
 import axiosClient from '@/app/utils/axios-client';
 
 const RegisterModal = () => {
+  const { addUser } = useHomeStore();
   const registerModal  = useRegisterModal();
   const loginModal = useLoginModal();
   const [isLoading, setIsLoading] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FieldValues>({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<FieldValues>({
     defaultValues: {
       name: '',
       email: '',
@@ -33,21 +38,23 @@ const RegisterModal = () => {
     }
   });
 
-  const onSubmit: SubmitHandler<FieldValues> = (data) => {
+  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     setIsLoading(true);
 
-    axiosClient.post('/auth/register', data)
-      .then(({data}) => {
-        localStorage.setItem("ACCESS_TOKEN", data.token);
-        registerModal.onClose();
-        toast.success('Logged in successfully!');
-      })
-      .catch((error) => {
-        toast.error('Something went wrong, maybe email already exists!');
-      })
-      .finally(() => {
-        setIsLoading(false);
-      })
+    try {
+      const response = await axiosClient.post('/auth/register', data);
+      localStorage.setItem("ACCESS_TOKEN", response.data.token);
+
+      const userDetails = await getCurrentUser();
+      addUser(userDetails);
+      toast.success('Logged in successfully!');
+      reset();
+      registerModal.onClose();
+    } catch (error) {
+      toast.error("Something went wrong, maybe email already exists!");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const bodyContent = (
