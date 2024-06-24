@@ -5,6 +5,8 @@ interface HomeStore {
     addUser: (user: any) => void;
     addFavoriteId: (id: string) => void;
     removeFavoriteId: (id: string) => void;
+    location: any;
+    addLocation: ( location: any) => void;
     reset: () => void;
 }
 
@@ -37,9 +39,15 @@ const useHomeStore = create<HomeStore>((set, get) => ({
           set({ user: updatedUser });
       },
 
+      location: null,
+      addLocation: (location: any) => {
+        set({ location: location})
+      },
+
       reset: () => {
         set({
             user: null,
+            location: null,
         })
       }
 }))

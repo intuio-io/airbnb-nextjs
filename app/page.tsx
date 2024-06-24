@@ -1,26 +1,21 @@
 'use client';
 import { useState, useEffect, useRef } from "react";
-// import { GoogleMap, LoadScript, OverlayView, OverlayViewF } from '@react-google-maps/api';
-
+import { useSearchParams } from 'next/navigation';
+import { GoogleMap, OverlayView, OverlayViewF, useLoadScript } from '@react-google-maps/api';
 
 // components
-// import GoogleMap from "./components/GoogleMap";
 import EmptyState from "./components/EmptyState";
 import Container from "./components/Container";
 import ListingCard from "./components/listings/ListingCard";
 import ListingLoader from "./components/listings/ListingLoader";
+import MapMarker from "./components/MapMarker";
 
 // actions
 import { getListings } from "./store/actions/listingActions";
 
 // hooks
 import useHomeStore from "./store/homeStore";
-
-// keep this on top
-// const center = {
-//   lat: 15.3501487,
-//   lng: 73.6770293
-// };
+import useSocket from "./hooks/useSocket";
 
 interface IListingsParams {
   userId?: string;
@@ -30,65 +25,68 @@ interface HomeProps {
   searchParams: IListingsParams;
 }
 
+
 const Home = ({searchParams}: HomeProps) => {
-  const { user } = useHomeStore();
-  const [listings, setListings] = useState([]);
+  const { user, location } = useHomeStore();
+  const [listings, setListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mapListings, setMapListings] = useState<any[]>([]);
   const [isEmpty, setIsEmpty] = useState(true);
   const [isLoadingFinished, setIsLoadingFinished] = useState(false);
   const loadingTime = Number(process.env.NEXT_PUBLIC_LOADING_TIME) || 1000;
+  const socket = useSocket(process.env.NEXT_PUBLIC_API_BASE_URL);
 
-  // const [showPopup, setShowPopup] = useState(false);
-  // const [mapBounds, setMapBounds] = useState(null);
-  // const mapRef = useRef(null);  
-
-
-  // const CustomMarker = ({ text, onClick }) => (
-  //   <div 
-  //     onClick={onClick}
-  //     style={{
-  //       backgroundColor: 'red',
-  //       color: 'white',
-  //       padding: '10px 15px',
-  //       display: 'inline-flex',
-  //       textAlign: 'center',
-  //       alignItems: 'center',
-  //       justifyContent: 'center',
-  //       borderRadius: '50%',
-  //       transform: 'translate(-50%, -50%)',
-  //       cursor: 'pointer'
-  //     }}
-  //   >
-  //     {text}
-  //   </div>
-  // );
   
-  // const Popup = ({ text, onClose }) => (
-  //   <div style={{
-  //     position: 'absolute',
-  //     bottom: '100%',
-  //     left: '50%',
-  //     transform: 'translate(-50%, -10px)',
-  //     backgroundColor: 'white',
-  //     padding: '10px',
-  //     borderRadius: '5px',
-  //     boxShadow: '0px 0px 10px rgba(0,0,0,0.1)'
-  //   }}>
-  //     <div style={{ marginBottom: '10px' }}>{text}</div>
-  //     <button onClick={onClose}>Close</button>
-  //   </div>
-  // );
+  const { isLoaded } = useLoadScript({ googleMapsApiKey: process.env.NEXT_PUBLIC_GEOLOCATION_API_KEY || '' });
+
+  const params = useSearchParams();
+  const locationValue = params?.get('locationValue');
+
+  const [mapCenter, setMapCenter] = useState({ lat: location?.latlng[0], lng: location?.latlng[1]  });
+  const [showPopup, setShowPopup] = useState(false);
+  const [mapBounds, setMapBounds] = useState<any>(null);
+  const [listingId, setListingId] = useState<string>("");
+
+  const mapRef = useRef<any>(null);  
+  
+  const Popup = ({ text, onClose }) => (
+    <div style={{
+      position: 'absolute',
+      bottom: '100%',
+      left: '50%',
+      transform: 'translate(-50%, -10px)',
+      backgroundColor: 'white',
+      padding: '10px',
+      borderRadius: '5px',
+      boxShadow: '0px 0px 10px rgba(0,0,0,0.1)'
+    }}>
+      <div style={{ marginBottom: '10px' }}>{text}</div>
+      <button onClick={onClose}>Close</button>
+    </div>
+  );
+
+  useEffect(() => {
+    if (location?.latlng) {
+      setMapCenter({ lat: location.latlng[0], lng: location.latlng[1] });
+    }
+  }, [location]);
   
   useEffect(() => {
     const fetchDetails = async () => {
       const params = searchParams;
-      const data = await getListings({setLoading, params});
-      setListings(data);
-      setIsEmpty(!(data.length > 0));
+      const listings = await getListings({setLoading, params});
+      setListings(listings);
+
+      setIsEmpty(!(listings.length > 0));
     }
 
     fetchDetails();
-  }, [searchParams]);
+
+    if (socket) socket.on("listingsUpdated", () => fetchDetails());
+
+    return () =>  {socket && socket.off('listingsUpdated');}
+  }, [searchParams, socket]);
+
 
   // just to give the loader a cool effect
   useEffect(() => {
@@ -101,6 +99,12 @@ const Home = ({searchParams}: HomeProps) => {
     }
   }, [loading]);
 
+
+  useEffect(() => {
+      const currentData = listings.filter((listing) => mapBounds && mapBounds.contains({ lat: listing.locationValue.latlng[0], lng: listing.locationValue.latlng[1] }));
+      setMapListings(currentData);
+  }, [mapBounds])
+
   if(loading || !isLoadingFinished) {
     return ( <ListingLoader count={9}/> )
   }
@@ -109,85 +113,88 @@ const Home = ({searchParams}: HomeProps) => {
     return <EmptyState showReset/>
   }
 
+  const handleBoundsChanged = () => {
+    if (mapRef.current) {
+      setMapBounds(mapRef.current.getBounds());
+    }
+  };
 
-  // const markers = [
-  //   { id: 1, lat: 15.563718263775774, lng: 73.80066112807999, info: "₹1200" },
-  //   { id: 2, lat: 15.550703965947815, lng: 73.7885000284254, info: "₹1800" },
-  //   { id: 3, lat: 15.30322, lng: 73.9140425, info: "₹1002" },
-  //   { id: 4, lat: 15.2765182, lng: 73.9183683, info: "₹3453" },
-  //   { id: 5, lat: 15.1926526, lng: 74.0450205, info: "₹1232" },
-  //   { id: 6, lat: 15.2792318, lng: 73.9360818, info: "₹3453" },
-  //   { id: 7, lat: 15.0366355, lng: 73.990198, info: "₹4545" },
-  // ]
+  const handleMarkerClick = (listing: any) => {
+    setShowPopup(true);
+    setListingId(listing.id);
+  };
 
-  // const visibleMarkers = markers.filter((listing) => mapBounds && mapBounds.contains({ lat: listing.lat, lng: listing.lng }));
-
-  // console.log(visibleMarkers);
-
-
-  // const handleBoundsChanged = () => {
-  //   if (mapRef.current) {
-  //     setMapBounds(mapRef.current.getBounds());
-  //   }
-  // };
-
-  // const handleMarkerClick = () => {
-  //   setShowPopup(true);
-  // };
-
-  // const handleClosePopup = () => {
-  //   setShowPopup(false);
-  // };
+  const handleClosePopup = () => {
+    setShowPopup(false);
+    setListingId("");
+  };
 
 
-  return (
-    <Container>
-      <div className="pt-24 grid grid-cols-1  sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-8">
-        {listings.map((listing: any) => {
-          return <ListingCard
-            currentUser={user}
-            key={listing.id}
-            data={listing}
-          />
-        })}
-
-        {/* <div>
-
-    <div style={{ height: '100vh', width: '900px' }}>
-          <LoadScript googleMapsApiKey="AIzaSyBs-qVUie4dglZmVZsPJ4vJ-VkGT8VaXks">
-            <GoogleMap
-              mapContainerStyle={{
-                width: '100%',
-                height: '100vh'
-              }}
-              center={center}
-              zoom={11}
-              onLoad={(map) => mapRef.current = map}
-              onBoundsChanged={handleBoundsChanged}
-            >
-          {markers.map((map) => {
-            return (               <OverlayViewF
-            key={map.id}
-              position={{ lat: map.lat, lng: map.lng }}
-              mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-            >
-            <>
-                
-
-            <CustomMarker text="Wow" onClick={handleMarkerClick} />
-              {showPopup && <Popup text="Marker Information" onClose={handleClosePopup} />}
-            </>
-            </OverlayViewF>)
-          })}
-    
-            </GoogleMap>
-          </LoadScript>
+  if(location && locationValue) {
+    return (
+      <div className="flex flex-col md:flex-row">
+      <div className="w-full lg:w-3/5 overflow-y-auto">
+        <Container>
+          <div className="pt-24 grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+            {mapListings.map((listing: any) => {
+              return <ListingCard
+                currentUser={user}
+                key={listing.id}
+                data={listing}
+              />
+            })}
+        </div>
+      </Container>
     </div>
 
-        </div> */}
-      </div>
-    </Container>
-  );
+ {isLoaded ? (   
+    <div className="fixed top-24 right-0 md:w-2/5 h-screen hidden lg:block">
+        <GoogleMap
+          mapContainerStyle={{ width: '100%', height: '90vh' }}
+          center={mapCenter}
+          zoom={6}
+          onBoundsChanged={handleBoundsChanged}
+          onLoad={(map: any) => mapRef.current = map}
+          mapTypeId='roadmap' // Set the map type to satellite
+        >
+      {listings.map((listing) => {
+        return (
+        <OverlayViewF
+          key={listing.id}
+          position={{ lat: listing.locationValue.latlng[0], lng: listing.locationValue.latlng[1] }}
+          mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+        >
+        <>
+            
+        <MapMarker listing={listing} onClick={() => handleMarkerClick(listing)} />
+          {showPopup && listingId === listing.id && <Popup text="Marker Information" onClose={handleClosePopup} />}
+        </>
+        </OverlayViewF>)
+      })}
+        </GoogleMap>
+      </div>) : 
+      
+      <div>Loading...</div>}
+    </div>
+    )
+
+  }
+
+  return (
+      <>
+      <Container>
+        <div className="pt-24 grid grid-cols-1  sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-8">
+        {listings.map((listing: any) => {
+                  return <ListingCard
+                    currentUser={user}
+                    key={listing.id}
+                    data={listing}
+                  />
+                })}
+        </div>
+        </Container>
+      </>
+)
 }
 
 export default Home;

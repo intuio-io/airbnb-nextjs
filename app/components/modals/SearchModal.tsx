@@ -9,11 +9,13 @@ import { formatISO } from 'date-fns';
 // components
 import Modal from './Modal';
 import useSearchModal from '@/app/hooks/useSearchModal';
-import { CountrySelectValue } from '../Map';
 import Heading from '../Heading';
 import CountrySelect from '../inputs/CountrySelect';
 import Calendar from '../inputs/Calendar';
 import Counter from '../inputs/Counter';
+
+// hooks
+import useHomeStore from '@/app/store/homeStore';
 
 enum STEPS {
     LOCATION = 0,
@@ -22,11 +24,11 @@ enum STEPS {
 };
 
 const SearchModal = () => {
+    const {location, addLocation} = useHomeStore();
     const searchModal = useSearchModal();
     const router = useRouter();
     const params = useSearchParams();
 
-    const [location, setLocation] = useState<CountrySelectValue>();
     const [step, setStep] = useState(STEPS.LOCATION);
     const [guestCount, setGuestCount] = useState(1);
     const [roomCount, setRoomCount] = useState(1);
@@ -107,7 +109,7 @@ const SearchModal = () => {
             />
             <CountrySelect
                 value={location}
-                onChange={(value) => setLocation(value)}
+                onChange={(value) => addLocation(value)}
             />
             <hr/>
 
