@@ -9,6 +9,7 @@ import Container from "./components/Container";
 import ListingCard from "./components/listings/ListingCard";
 import ListingLoader from "./components/listings/ListingLoader";
 import MapMarker from "./components/MapMarker";
+import ListingMapMenu from "./components/listings/ListingMapMenu";
 
 // actions
 import { getListings } from "./store/actions/listingActions";
@@ -42,28 +43,12 @@ const Home = ({searchParams}: HomeProps) => {
   const params = useSearchParams();
   const locationValue = params?.get('locationValue');
 
-  const [mapCenter, setMapCenter] = useState({ lat: location?.latlng[0], lng: location?.latlng[1]  });
+  const [mapCenter, setMapCenter] = useState<any>({});
   const [showPopup, setShowPopup] = useState(false);
   const [mapBounds, setMapBounds] = useState<any>(null);
   const [listingId, setListingId] = useState<string>("");
 
   const mapRef = useRef<any>(null);  
-  
-  const Popup = ({ text, onClose }) => (
-    <div style={{
-      position: 'absolute',
-      bottom: '100%',
-      left: '50%',
-      transform: 'translate(-50%, -10px)',
-      backgroundColor: 'white',
-      padding: '10px',
-      borderRadius: '5px',
-      boxShadow: '0px 0px 10px rgba(0,0,0,0.1)'
-    }}>
-      <div style={{ marginBottom: '10px' }}>{text}</div>
-      <button onClick={onClose}>Close</button>
-    </div>
-  );
 
   useEffect(() => {
     if (location?.latlng) {
@@ -147,7 +132,7 @@ const Home = ({searchParams}: HomeProps) => {
       </Container>
     </div>
 
- {isLoaded ? (   
+ {isLoaded && mapCenter.lat && mapCenter.lng ? (   
     <div className="fixed top-24 right-0 md:w-2/5 h-screen hidden lg:block">
         <GoogleMap
           mapContainerStyle={{ width: '100%', height: '90vh' }}
@@ -165,9 +150,19 @@ const Home = ({searchParams}: HomeProps) => {
           mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
         >
         <>
-            
+
+          <div className="relative">
+          {showPopup && listingId === listing.id &&  
+    
+    <div className="z-50 absolute w-[20rem]">
+      <ListingMapMenu data={listing} user={user} onClose={handleClosePopup}/>
+    </div>
+
+}
+     
         <MapMarker listing={listing} onClick={() => handleMarkerClick(listing)} />
-          {showPopup && listingId === listing.id && <Popup text="Marker Information" onClose={handleClosePopup} />}
+          </div>
+
         </>
         </OverlayViewF>)
       })}
