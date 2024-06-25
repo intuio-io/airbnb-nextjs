@@ -3,6 +3,7 @@
 ## Prerequisites
 
 Ensure you have Node.js installed with a version higher than 18.
+Also be sure to set up the server either express or laravel
 
 ## Installation Steps
 
@@ -11,40 +12,44 @@ Ensure you have Node.js installed with a version higher than 18.
    ```bash
    git clone <your-repo-url>
    cd <your-repo-directory>
-   Check Node Version
    ```
 
-Verify that your Node.js version is higher than 18:
+2. **Verify that your Node.js version is higher than 18:**
+   Check Node Version
 
-bash
-Copy code
-node -v
-Install Dependencies
+   ```bash
+   node -v
+   ```
 
-Run the following command to install the necessary dependencies:
+3. **Run the following command to install the necessary dependencies:**
+   Install Dependencies
+   Check Node Version
 
-bash
-Copy code
-npm install
-Create a .env File
+   ```bash
+   npm install
+   ```
 
-In the root of the project, create a .env file and add the following keys:
+4. **In the root of the project, create a .env file and add the following keys:**
+   Create a .env File
 
-env
-Copy code
-NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
-NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="dxq0m4l9x"
-NEXT_PUBLIC_GEOLOCATION_API_KEY=fdsfsfs
-If you have a custom loader time, add this line to the .env file:
+   ```bash
+   # Base URL for the API
+   NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
 
-env
-Copy code
-NEXT_PUBLIC_LOADING_TIME=1000
-Run the Project
+   # Cloudinary cloud name
+   NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=someName
 
-Use the following command to start the development server:
+   # Geolocation API key
+   NEXT_PUBLIC_GEOLOCATION_API_KEY=api
 
-bash
-Copy code
-npm run dev
+   # Custom loader time (optional)
+   NEXT_PUBLIC_LOADING_TIME=1000
+   ```
+
+5. **Run the Project**
+   Use the following command to start the development server:
+   ```bash
+   npm run dev
+   ```
+
 You're all set! The project should now be running on your local server.
