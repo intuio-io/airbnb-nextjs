@@ -26,9 +26,9 @@ const ListingMapMenu: React.FC<ListingMapMenuProps> = ({data, user, onClose}) =>
     const guest = formatText('guest', data?.guestCount);
     const bathroom = formatText('bathroom', data?.bathroomCount)
   return (
-<div className="rounded-xl bg-white overflow-hidden shadow-lg">
-    <div className='h-60 w-full relative overflow-hidden rounded-t-xl'>
-    <Image fill alt="Map Listing" src={data.imageSrc} className='object-cover w-full group-hover:scale-100 transition'/>
+<div className="rounded-xl bg-white overflow-hidden shadow-[rgba(0,_0,_0,_0.24)_0px_3px_8px] cursor-pointer ">
+    <div className='h-48 xl:h-60 w-full relative overflow-hidden rounded-t-xl'>
+    <Image fill alt="Map Listing" src={data.imageSrc} className='object-cover h-full w-full hover:scale-110 transition'/>
     <div className='absolute top-3 right-3 flex flex-row gap-8'>
         <div>
         <HeartButton

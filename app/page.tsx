@@ -153,14 +153,11 @@ const Home = ({searchParams}: HomeProps) => {
 
           <div className="relative">
           {showPopup && listingId === listing.id &&  
-    
-    <div className="z-50 absolute w-[20rem]">
-      <ListingMapMenu data={listing} user={user} onClose={handleClosePopup}/>
-    </div>
-
-}
-     
-        <MapMarker listing={listing} onClick={() => handleMarkerClick(listing)} />
+          <div className="z-50 absolute bottom-[calc(140%)] left-1/2 transform -translate-x-1/2 w-[17rem] xl:w-[20rem]">
+              <ListingMapMenu data={listing} user={user} onClose={handleClosePopup}/>
+           </div>
+            }
+              <MapMarker isActive={listingId === listing.id} listing={listing} onClick={() => handleMarkerClick(listing)} />
           </div>
 
         </>

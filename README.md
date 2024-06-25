@@ -2,8 +2,7 @@
 
 ## Prerequisites
 
-Ensure you have Node.js installed with a version higher than 18.
-Also be sure to set up the server either express or laravel
+Ensure you have Node.js version 18+ installed, and also be sure to set up the server either Express or Laravel
 
 ## Installation Steps
 
@@ -14,23 +13,19 @@ Also be sure to set up the server either express or laravel
    cd <your-repo-directory>
    ```
 
-2. **Verify that your Node.js version is higher than 18:**
-   Check Node Version
+2. **Verify your node version**
 
    ```bash
    node -v
    ```
 
 3. **Run the following command to install the necessary dependencies:**
-   Install Dependencies
-   Check Node Version
 
    ```bash
    npm install
    ```
 
 4. **In the root of the project, create a .env file and add the following keys:**
-   Create a .env File
 
    ```bash
    # Base URL for the API
@@ -46,8 +41,7 @@ Also be sure to set up the server either express or laravel
    NEXT_PUBLIC_LOADING_TIME=1000
    ```
 
-5. **Run the Project**
-   Use the following command to start the development server:
+5. **Run the project to start your development server**
    ```bash
    npm run dev
    ```
