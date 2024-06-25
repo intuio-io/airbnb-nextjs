@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Next.js Project Installation Instructions
 
-## Getting Started
+## Prerequisites
 
-First, run the development server:
+Ensure you have Node.js installed with a version higher than 18.
 
-```bash
+## Installation Steps
+
+1. **Clone the Repository**
+
+   ```bash
+   git clone <your-repo-url>
+   cd <your-repo-directory>
+   Check Node Version
+   ```
+
+Verify that your Node.js version is higher than 18:
+
+bash
+Copy code
+node -v
+Install Dependencies
+
+Run the following command to install the necessary dependencies:
+
+bash
+Copy code
+npm install
+Create a .env File
+
+In the root of the project, create a .env file and add the following keys:
+
+env
+Copy code
+NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="dxq0m4l9x"
+NEXT_PUBLIC_GEOLOCATION_API_KEY=fdsfsfs
+If you have a custom loader time, add this line to the .env file:
+
+env
+Copy code
+NEXT_PUBLIC_LOADING_TIME=1000
+Run the Project
+
+Use the following command to start the development server:
+
+bash
+Copy code
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+You're all set! The project should now be running on your local server.
