@@ -23,7 +23,7 @@ const CategoryInput: React.FC<CategoryInputProps> = ({
     <div className="font-semibold">
       {label}
     </div>
-   </div>;
+   </div>
 };
 
 export default CategoryInput;

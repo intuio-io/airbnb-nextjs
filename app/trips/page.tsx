@@ -8,6 +8,7 @@ import ListingLoader from '../components/listings/ListingLoader';
 
 // hooks
 import useHomeStore from '../store/homeStore';
+import useSocket from '../hooks/useSocket';
 
 // actions
 import { getReservations } from '../store/actions/reservationActions';
@@ -18,6 +19,7 @@ const page =  () => {
     const [resLoading, setResLoading] = useState<boolean>(false);
     const [isLoadingFinished, setIsLoadingFinished] = useState(false);
     const loadingTime = Number(process.env.NEXT_PUBLIC_LOADING_TIME) || 1000; 
+    const socket = useSocket(process.env.NEXT_PUBLIC_API_BASE_URL);
 
     useEffect(() => {
       if(!user) return;
@@ -28,7 +30,11 @@ const page =  () => {
         setReservations(data);
      };
      fetchReservations();
-    }, [user])
+
+     if (socket) socket.on("reservationsDeleted", () => fetchReservations());
+
+     return () =>  {socket && socket.off('reservationsDeleted');}
+    }, [user, socket])
 
     // just to give the loader a cool effect
     useEffect(() => {

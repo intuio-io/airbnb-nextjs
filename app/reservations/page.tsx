@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect} from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 
 // components
 import EmptyState from '../components/EmptyState'
@@ -8,6 +8,7 @@ import ListingLoader from '../components/listings/ListingLoader';
 
 // hooks
 import useHomeStore from '../store/homeStore';
+import useSocket from "../hooks/useSocket";
 
 // actions
 import { getReservations } from '../store/actions/reservationActions';
@@ -17,18 +18,34 @@ const page = () => {
     const [reservations, setReservations] = useState<any[]>([]);
     const [resLoading, setResLoading] = useState<boolean>(false);
     const [isLoadingFinished, setIsLoadingFinished] = useState(false);
-    const loadingTime = Number(process.env.NEXT_PUBLIC_LOADING_TIME) || 1000; 
+    const loadingTime = Number(process.env.NEXT_PUBLIC_LOADING_TIME) || 1000;
+    const socket = useSocket(process.env.NEXT_PUBLIC_API_BASE_URL);
+
+    const fetchReservations = useCallback(async () => {
+      const params = { authorId: user.id };
+      const data = await getReservations({ setResLoading, params });
+      setReservations(data);
+    }, [user]);
 
     useEffect(() => {
-        if(!user) return;
-        const fetchReservations = async () => {
-            const params = { authorId: user.id }
-            const data = await getReservations({setResLoading, params})
-            setReservations(data);
-         };
-     
-         fetchReservations();
-    }, [user])
+      if (!user) return;
+  
+      // Initial fetch
+      fetchReservations();
+  
+      // Event listeners setup
+      if (socket) {
+  
+        socket.on("reservationsUpdated", () => fetchReservations());
+        socket.on("reservationsDeleted", () => fetchReservations());
+  
+        // Cleanup function
+        return () => {
+          socket.off('reservationsUpdated');
+          socket.off('reservationsDeleted');
+        };
+      }
+    }, [user, socket, fetchReservations]);
 
         // just to give the loader a cool effect
         useEffect(() => {
