@@ -1,5 +1,7 @@
 'use client';
-import React, { useState, useEffect} from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
+import Pusher from 'pusher-js'
+import { io } from 'socket.io-client';
 
 // components
 import EmptyState from '../components/EmptyState';
@@ -8,7 +10,6 @@ import ListingLoader from '../components/listings/ListingLoader';
 
 // hooks
 import useHomeStore from '../store/homeStore';
-import useSocket from '../hooks/useSocket';
 
 // actions
 import { getListings } from '../store/actions/listingActions';
@@ -19,23 +20,50 @@ const page = () => {
     const [listings, setListings] = useState([]);
     const [isLoadingFinished, setIsLoadingFinished] = useState(false);
     const loadingTime = Number(process.env.NEXT_PUBLIC_LOADING_TIME) || 1000;
-    const socket = useSocket(process.env.NEXT_PUBLIC_API_BASE_URL);
+
+    const fetchDetails = useCallback(async () => {
+      const params = {userId: user.id}
+      const data = await getListings({setLoading, params});
+      setListings(data);
+    }, [user]);
 
     useEffect(() => {
         if(!user) return;
-
-        const fetchDetails = async () => {
-            const params = {userId: user.id}
-            const data = await getListings({setLoading, params});
-            setListings(data);
-          }
       
           fetchDetails();
+    }, [user, fetchDetails]);
 
-          if (socket) socket.on("listingsDeleted", () => fetchDetails());
+    useEffect(() => {
+      if(!user) return;
+  
+      if (process.env.NEXT_PUBLIC_SOCKET_TYPE === 'ExpressSocket') {
+        const socket = io(process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000');
+        socket.on("listingsDeleted", () => fetchDetails());
+        return () => {
+          socket.off('listingsDeleted');
+          socket.disconnect();
+        }
+      }
+    }, [fetchDetails, user]);
 
-          return () =>  {socket && socket.off('listingsDeleted');}
-    }, [user]);
+
+    useEffect(() => {
+      if (!user) return;
+  
+      if (process.env.NEXT_PUBLIC_PUSHER_SOCKET_TYPE === 'LaravelPusher' && process.env.NEXT_PUBLIC_PUSHER_APP_KEY && process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER) {
+        const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_APP_KEY, {
+          cluster: process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER,
+        });
+  
+        const channel = pusher.subscribe('listing-channel');
+        channel.bind('listingsDeleted', () => fetchDetails());
+  
+        return () => {
+          channel.unbind_all();
+          channel.unsubscribe();
+        };
+      }
+    }, [fetchDetails, user]);
 
         // just to give the loader a cool effect
         useEffect(() => {

@@ -1,7 +1,9 @@
 'use client';
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from 'next/navigation';
 import { GoogleMap, OverlayView, OverlayViewF, useLoadScript } from '@react-google-maps/api';
+import Pusher from "pusher-js";
+import { io } from 'socket.io-client';
 
 // components
 import EmptyState from "./components/EmptyState";
@@ -16,7 +18,6 @@ import { getListings } from "./store/actions/listingActions";
 
 // hooks
 import useHomeStore from "./store/homeStore";
-import useSocket from "./hooks/useSocket";
 
 interface IListingsParams {
   userId?: string;
@@ -35,7 +36,6 @@ const Home = ({searchParams}: HomeProps) => {
   const [isEmpty, setIsEmpty] = useState(true);
   const [isLoadingFinished, setIsLoadingFinished] = useState(false);
   const loadingTime = Number(process.env.NEXT_PUBLIC_LOADING_TIME) || 1000;
-  const socket = useSocket(process.env.NEXT_PUBLIC_API_BASE_URL);
 
   
   const { isLoaded } = useLoadScript({ googleMapsApiKey: process.env.NEXT_PUBLIC_GEOLOCATION_API_KEY || '' });
@@ -48,7 +48,14 @@ const Home = ({searchParams}: HomeProps) => {
   const [mapBounds, setMapBounds] = useState<any>(null);
   const [listingId, setListingId] = useState<string>("");
 
-  const mapRef = useRef<any>(null);  
+  const mapRef = useRef<any>(null);
+
+  const fetchDetails = useCallback(async () => {
+    const params = searchParams;
+    const listings = await getListings({setLoading, params});
+    setListings(listings);
+    setIsEmpty(!(listings.length > 0));
+  }, [user, searchParams]);
 
   useEffect(() => {
     if (location?.latlng) {
@@ -57,20 +64,37 @@ const Home = ({searchParams}: HomeProps) => {
   }, [location]);
   
   useEffect(() => {
-    const fetchDetails = async () => {
-      const params = searchParams;
-      const listings = await getListings({setLoading, params});
-      setListings(listings);
-
-      setIsEmpty(!(listings.length > 0));
-    }
-
     fetchDetails();
 
-    if (socket) socket.on("listingsUpdated", () => fetchDetails());
+  }, [fetchDetails, searchParams, user]);
 
-    return () =>  {socket && socket.off('listingsUpdated');}
-  }, [searchParams, socket]);
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_SOCKET_TYPE === 'ExpressSocket') {
+      const socket = io(process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000');
+      socket.on("listingsUpdated", () => fetchDetails());
+      return () =>  {
+        socket.off('listingsUpdated');
+        socket.disconnect();
+      }
+    }
+  }, [user, fetchDetails]);
+
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_PUSHER_SOCKET_TYPE === 'LaravelPusher' && process.env.NEXT_PUBLIC_PUSHER_APP_KEY && process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER) {
+      const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_APP_KEY, {
+        cluster: process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER,
+      });
+
+      const channel = pusher.subscribe('listing-channel');
+
+      channel.bind('listingsUpdated', () => fetchDetails());
+
+      return () => {
+        channel.unbind_all();
+        channel.unsubscribe();
+      };
+    }
+  }, [user, fetchDetails])
 
 
   // just to give the loader a cool effect

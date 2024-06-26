@@ -1,5 +1,7 @@
 'use client';
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
+import Pusher from 'pusher-js';
+import { io } from 'socket.io-client';
 
 // components
 import TripsClient from './TripsClient';
@@ -8,7 +10,6 @@ import ListingLoader from '../components/listings/ListingLoader';
 
 // hooks
 import useHomeStore from '../store/homeStore';
-import useSocket from '../hooks/useSocket';
 
 // actions
 import { getReservations } from '../store/actions/reservationActions';
@@ -19,22 +20,50 @@ const page =  () => {
     const [resLoading, setResLoading] = useState<boolean>(false);
     const [isLoadingFinished, setIsLoadingFinished] = useState(false);
     const loadingTime = Number(process.env.NEXT_PUBLIC_LOADING_TIME) || 1000; 
-    const socket = useSocket(process.env.NEXT_PUBLIC_API_BASE_URL);
+
+    const fetchReservations = useCallback(async () => {
+      const params = { userId: user.id };
+      const data = await getReservations({ setResLoading, params });
+      setReservations(data);
+    }, [user]);
 
     useEffect(() => {
       if(!user) return;
 
-      const fetchReservations = async () => {
-        const params = { userId: user.id }
-        const data = await getReservations({setResLoading, params})
-        setReservations(data);
-     };
      fetchReservations();
+    }, [user])
 
-     if (socket) socket.on("reservationsDeleted", () => fetchReservations());
+    useEffect(() => {
+      if (!user) return;
 
-     return () =>  {socket && socket.off('reservationsDeleted');}
-    }, [user, socket])
+      if (process.env.NEXT_PUBLIC_SOCKET_TYPE === 'ExpressSocket') {
+        const socket = io(process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000');
+        socket.on("reservationsDeleted", () => fetchReservations());
+        return () => {
+          socket.off('reservationsDeleted');
+          socket.disconnect();
+        }
+      }
+    }, [fetchReservations, user])
+
+    useEffect(() => {
+      if (!user) return;
+  
+      if (process.env.NEXT_PUBLIC_PUSHER_SOCKET_TYPE === 'LaravelPusher' && process.env.NEXT_PUBLIC_PUSHER_APP_KEY && process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER) {
+        const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_APP_KEY, {
+          cluster: process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER,
+        });
+  
+        const channel = pusher.subscribe('reservation-channel');
+  
+        channel.bind('reservationsDeleted', () => fetchReservations());
+  
+        return () => {
+          channel.unbind_all();
+          channel.unsubscribe();
+        };
+      }
+    }, [fetchReservations, user]);
 
     // just to give the loader a cool effect
     useEffect(() => {
