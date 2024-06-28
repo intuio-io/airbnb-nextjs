@@ -43,7 +43,7 @@ const CountrySelect: React.FC<CountrySelectProps> = ({value, onChange}) => {
             </div>
         )}
         classNames={{
-            control: () => 'p-3 border-2',
+            control: () => 'p-2 border-2',
             input: () => 'text-lg',
             option: () => 'text-lg'
         }}

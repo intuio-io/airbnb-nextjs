@@ -23,8 +23,8 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({ listings, currentUs
     
     const onCancel = useCallback((id: string) => {
         setDeletingId(id);
-        axiosClient.delete(`/listing/delete/${id}`).then(() => {
-            toast.success("Listings Deleted");
+        axiosClient.delete(`/listing/delete/${id}`).then(({ data }) => {
+            toast.success(data.message);
             router.refresh();
         })
         .catch((error) => {
