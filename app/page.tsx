@@ -36,7 +36,6 @@ const Home = ({searchParams}: HomeProps) => {
   const [isEmpty, setIsEmpty] = useState(true);
   const [isLoadingFinished, setIsLoadingFinished] = useState(false);
   const loadingTime = Number(process.env.NEXT_PUBLIC_LOADING_TIME) || 1000;
-
   
   const { isLoaded } = useLoadScript({ googleMapsApiKey: process.env.NEXT_PUBLIC_GEOLOCATION_API_KEY || '' });
 
@@ -47,6 +46,7 @@ const Home = ({searchParams}: HomeProps) => {
   const [showPopup, setShowPopup] = useState(false);
   const [mapBounds, setMapBounds] = useState<any>(null);
   const [listingId, setListingId] = useState<string>("");
+  const [currentZoom, setCurrentZoom] = useState<number>(10); 
 
   const mapRef = useRef<any>(null);
 
@@ -110,9 +110,15 @@ const Home = ({searchParams}: HomeProps) => {
 
 
   useEffect(() => {
-      const currentData = listings.filter((listing) => mapBounds && mapBounds.contains({ lat: listing.locationValue.latlng[0], lng: listing.locationValue.latlng[1] }));
-      setMapListings(currentData);
-  }, [mapBounds])
+    let currentData = listings.filter((listing) => mapBounds && mapBounds.contains({ lat: listing.locationValue.latlng[0], lng: listing.locationValue.latlng[1] }));
+    currentData.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+
+    if (currentZoom < 5)  currentData = currentData.slice(0, 3);
+    else if (currentZoom < 6)  currentData = currentData.slice(0, 6);
+    else if (currentZoom < 7)  currentData = currentData.slice(0, 8);
+  
+    setMapListings(currentData);
+  }, [mapBounds, currentZoom]);
 
   if(loading || !isLoadingFinished) {
     return ( <ListingLoader count={9}/> )
@@ -125,6 +131,7 @@ const Home = ({searchParams}: HomeProps) => {
   const handleBoundsChanged = () => {
     if (mapRef.current) {
       setMapBounds(mapRef.current.getBounds());
+      setCurrentZoom(mapRef.current.getZoom()); // Update the zoom level
     }
   };
 
@@ -166,7 +173,7 @@ const Home = ({searchParams}: HomeProps) => {
           onLoad={(map: any) => mapRef.current = map}
           mapTypeId='roadmap' // Set the map type to satellite
         >
-      {listings.map((listing) => {
+      {mapListings.map((listing) => {
         return (
         <OverlayViewF
           key={listing.id}
