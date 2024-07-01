@@ -1,6 +1,5 @@
 "use client";
 import React, { useCallback, useState } from 'react'
-import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 // utils
@@ -11,26 +10,29 @@ import Container from '../components/Container';
 import Heading from '../components/Heading';
 import ListingCard from '../components/listings/ListingCard';
 
+// hooks
+import useConfirmModal from '../hooks/useConfirmModal';
+
 interface PropertiesClientProps {
     listings: any;
     currentUser: any;
 }
 
 const PropertiesClient: React.FC<PropertiesClientProps> = ({ listings, currentUser}) => {
-    const router = useRouter();
+    const { onOpen, onClose, onLoading } = useConfirmModal();
     const [deletingId, setDeletingId] = useState('');
-
     
     const onCancel = useCallback((id: string) => {
         setDeletingId(id);
+        onLoading();
         axiosClient.delete(`/listing/delete/${id}`).then(({ data }) => {
             toast.success(data.message);
-            router.refresh();
         })
         .catch((error) => {
             toast.error(error?.message);
         }).finally(() => {
             setDeletingId('');
+            onClose();
         })
     },[]);
 
@@ -46,7 +48,7 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({ listings, currentUs
                     key={listing.id}
                     data={listing}
                     actionId={listing.id}
-                    onAction={onCancel}
+                    onAction={(id) => onOpen(() => onCancel(id))}
                     disabled={deletingId === listing.id}
                     actionLabel='Delete Property'
                     currentUser={currentUser}

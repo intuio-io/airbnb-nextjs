@@ -22,20 +22,18 @@ const page =  () => {
     const loadingTime = Number(process.env.NEXT_PUBLIC_LOADING_TIME) || 1000; 
 
     const fetchReservations = useCallback(async () => {
-      const params = { userId: user.id };
+      const params = { userId: user?.id };
       const data = await getReservations({ setResLoading, params });
       setReservations(data);
-    }, [user]);
+    }, [user?.id]);
 
     useEffect(() => {
       if(!user) return;
-
-     fetchReservations();
-    }, [user])
+      fetchReservations();
+    }, [user?.email])
 
     useEffect(() => {
-      if (!user) return;
-
+      if(!user) return;
       if (process.env.NEXT_PUBLIC_SOCKET_TYPE === 'ExpressSocket') {
         const socket = io(process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000');
         socket.on("reservationsDeleted", () => fetchReservations());
@@ -44,12 +42,12 @@ const page =  () => {
           socket.disconnect();
         }
       }
-    }, [fetchReservations, user])
+    }, [user?.email])
 
     useEffect(() => {
       if (!user) return;
   
-      if (process.env.NEXT_PUBLIC_PUSHER_SOCKET_TYPE === 'LaravelPusher' && process.env.NEXT_PUBLIC_PUSHER_APP_KEY && process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER) {
+      if (process.env.NEXT_PUBLIC_SOCKET_TYPE === 'LaravelPusher' && process.env.NEXT_PUBLIC_PUSHER_APP_KEY && process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER) {
         const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_APP_KEY, {
           cluster: process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER,
         });
@@ -63,7 +61,7 @@ const page =  () => {
           channel.unsubscribe();
         };
       }
-    }, [fetchReservations, user]);
+    }, [user?.email]);
 
     // just to give the loader a cool effect
     useEffect(() => {

@@ -8,6 +8,8 @@ import RegisterModal from "./components/modals/RegisterModal";
 import LoginModal from "./components/modals/LoginModal";
 import RentModal from "./components/modals/RentModal";
 import SearchModal from "./components/modals/SearchModal";
+import ConfirmModal from "./components/modals/ConfirmModal";
+import Footer from "./components/Footer";
 
 
 // providers
@@ -36,12 +38,15 @@ export default async function RootLayout({
           <RentModal/>
           <LoginModal/>
           <RegisterModal/>
+          <ConfirmModal />
           <Navbar/>
  
     
-       <div className="pb-20 pt-28"> 
+       <div className="pt-28 pb-20"> 
         {children}
        </div>
+       
+        <Footer/>
         </body>
     </html>
   );

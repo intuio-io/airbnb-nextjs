@@ -14,7 +14,7 @@ interface GetListingsParams {
             params: params
         });
         return response.data;
-    } catch (error) {
+    } catch (error: any) {
         toast.error('Error fetching listing');
     } finally {
         setLoading(false);
@@ -34,6 +34,7 @@ interface ListingDetailParams {
             return response.data;
         } catch (error: any) {
             toast.error("Error fetching Reservation details");
+            return [];
         } finally {
             setListingLoading(false);
         }

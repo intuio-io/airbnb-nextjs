@@ -1,7 +1,6 @@
 "use client";
 import React, { useCallback, useState} from 'react'
 import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
 
 // components
 import Heading from '../components/Heading';
@@ -11,26 +10,29 @@ import ListingCard from '../components/listings/ListingCard';
 // utils
 import axiosClient from '../utils/axios-client';
 
+// hooks
+import useConfirmModal from '../hooks/useConfirmModal';
+
 interface ReservationsClientProps {
   reservations: any[];
   currentUser?: any;
 }
 
 const ReservationsClient: React.FC<ReservationsClientProps> = ({reservations, currentUser}) => {
-  const router = useRouter();
+  const { onOpen, onClose, onLoading } = useConfirmModal();
   const [deletingId, setDeletingId] = useState('');
 
   const onCancel = useCallback((id: string) => {
     setDeletingId(id);
-
+    onLoading();
     axiosClient.delete(`/reservation/delete/${id}`).then(({ data }) => {
       toast.success(data.message);
-      router.refresh();
     })
     .catch((error) => {
       toast.error(error.message);
     }).finally(() => {
       setDeletingId("");
+      onClose();
     })
   }, [])
 
@@ -47,7 +49,7 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({reservations, cu
                       data={reservation.listing}
                       reservation={reservation}
                       actionId={reservation.id}
-                      onAction={onCancel}
+                      onAction={(id) => onOpen(() => onCancel(id))}
                       disabled={deletingId === reservation.id}
                       actionLabel='Cancel guest reservation'
                       currentUser={currentUser}

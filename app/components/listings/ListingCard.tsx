@@ -11,20 +11,18 @@ import useCountries from '@/app/hooks/useCountries';
 import HeartButton from '../HeartButton';
 import Button from '../Button';
 
-// utils
-import { formatString } from '@/app/utils/formatString';
-
 interface ListingCardProps {
     data: any;
     reservation?: any;
     onAction?: (id: string) => void;
+    hoverAction?: (id: string) => void;
     disabled?: boolean;
     actionLabel?: string;
     actionId?: string;
     currentUser?: Object | null;
 }
 
-const ListingCard: React.FC<ListingCardProps> = ({data, reservation, onAction, disabled, actionLabel, actionId = "", currentUser}) => {
+const ListingCard: React.FC<ListingCardProps> = ({data, reservation, onAction, hoverAction, disabled, actionLabel, actionId = "", currentUser}) => {
 const router = useRouter();
 const { getByValue } = useCountries();
 
@@ -55,7 +53,12 @@ const reservationDate = useMemo(() => {
 }, [reservation]);
 
   return (
-    <div onClick={() => router.push(`/listings/${data.id}`)} className='col-span-1 cursor-pointer group'>
+    <div 
+        onClick={() => router.push(`/listings/${data.id}`)} 
+        className='col-span-1 cursor-pointer group' 
+        onMouseEnter={() => hoverAction?.(data?.id)}
+        onMouseLeave={() => hoverAction?.("")}
+    >
      <div className='flex flex-col gap-2 w-full'>
      <div className='aspect-square w-full relative overflow-hidden rounded-xl'>
             <Image
@@ -71,8 +74,8 @@ const reservationDate = useMemo(() => {
                 />
             </div>
         </div>
-        <div className='font-semibold text-lg'>
-         {formatString(data?.title, 24)}
+        <div className='font-semibold text-lg whitespace-nowrap overflow-hidden text-ellipsis inline-block max-w-full'>
+        {data?.title}
        </div>
 
        {reservation?.user &&       
@@ -81,9 +84,16 @@ const reservationDate = useMemo(() => {
        </div>
        }
 
-        <div className='font-light text-neutral-500'>
-            {data?.locationValue?.region}, {location?.label} | {reservationDate || data.category}
+        <div className='font-light text-neutral-500 whitespace-nowrap overflow-hidden text-ellipsis inline-block max-w-full'>
+            {data?.locationValue?.region}, {location?.label} {`| ${data.category}`}
         </div>
+
+        {reservationDate && 
+            <div className='text-neutral-500'>
+            {reservationDate}
+            </div>
+       }
+
         <div className='flex flex-row items-center gap-1'>
             <div className='font-semibold'>
              ${price}
