@@ -25,13 +25,12 @@ const page = () => {
       const params = {userId: user.id}
       const data = await getListings({setLoading, params});
       setListings(data);
-    }, [user]);
+    }, [user?.id]);
 
     useEffect(() => {
         if(!user) return;
-      
-          fetchDetails();
-    }, [user, fetchDetails]);
+        fetchDetails();
+    }, [user?.email]);
 
     useEffect(() => {
       if(!user) return;
@@ -44,13 +43,13 @@ const page = () => {
           socket.disconnect();
         }
       }
-    }, [fetchDetails, user]);
+    }, [user?.email]);
 
 
     useEffect(() => {
       if (!user) return;
   
-      if (process.env.NEXT_PUBLIC_PUSHER_SOCKET_TYPE === 'LaravelPusher' && process.env.NEXT_PUBLIC_PUSHER_APP_KEY && process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER) {
+      if (process.env.NEXT_PUBLIC_SOCKET_TYPE === 'LaravelPusher' && process.env.NEXT_PUBLIC_PUSHER_APP_KEY && process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER) {
         const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_APP_KEY, {
           cluster: process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER,
         });
@@ -63,7 +62,7 @@ const page = () => {
           channel.unsubscribe();
         };
       }
-    }, [fetchDetails, user]);
+    }, [user?.email]);
 
         // just to give the loader a cool effect
         useEffect(() => {

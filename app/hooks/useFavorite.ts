@@ -49,9 +49,6 @@ const useFavorite = ({listingId, currentUser}: IUserFavorite) => {
 
             await request;
 
-
-            toast.success('Success');
-
         } catch (error) {
             toast.error("Something went wrong")
         }

@@ -46,6 +46,7 @@ const Home = ({searchParams}: HomeProps) => {
   const [showPopup, setShowPopup] = useState(false);
   const [mapBounds, setMapBounds] = useState<any>(null);
   const [listingId, setListingId] = useState<string>("");
+  const [hoveredListingId, setHoveredListingId] = useState<string>("");
   const [currentZoom, setCurrentZoom] = useState<number>(10); 
 
   const mapRef = useRef<any>(null);
@@ -55,7 +56,7 @@ const Home = ({searchParams}: HomeProps) => {
     const listings = await getListings({setLoading, params});
     setListings(listings);
     setIsEmpty(!(listings.length > 0));
-  }, [user, searchParams]);
+  }, [searchParams]);
 
   useEffect(() => {
     if (location?.latlng) {
@@ -65,22 +66,23 @@ const Home = ({searchParams}: HomeProps) => {
   
   useEffect(() => {
     fetchDetails();
-
-  }, [fetchDetails, searchParams, user]);
+  }, [searchParams]);
 
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_SOCKET_TYPE === 'ExpressSocket') {
       const socket = io(process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000');
       socket.on("listingsUpdated", () => fetchDetails());
+      socket.on("listingsDeleted", () => fetchDetails());
       return () =>  {
         socket.off('listingsUpdated');
+        socket.off('listingsDeleted');
         socket.disconnect();
       }
     }
-  }, [user, fetchDetails]);
+  }, []);
 
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_PUSHER_SOCKET_TYPE === 'LaravelPusher' && process.env.NEXT_PUBLIC_PUSHER_APP_KEY && process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER) {
+    if (process.env.NEXT_PUBLIC_SOCKET_TYPE === 'LaravelPusher' && process.env.NEXT_PUBLIC_PUSHER_APP_KEY && process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER) {
       const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_APP_KEY, {
         cluster: process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER,
       });
@@ -88,13 +90,14 @@ const Home = ({searchParams}: HomeProps) => {
       const channel = pusher.subscribe('listing-channel');
 
       channel.bind('listingsUpdated', () => fetchDetails());
+      channel.bind('listingsDeleted', () => fetchDetails());
 
       return () => {
         channel.unbind_all();
         channel.unsubscribe();
       };
     }
-  }, [user, fetchDetails])
+  }, [])
 
 
   // just to give the loader a cool effect
@@ -121,7 +124,7 @@ const Home = ({searchParams}: HomeProps) => {
   }, [mapBounds, currentZoom]);
 
   if(loading || !isLoadingFinished) {
-    return ( <ListingLoader count={9}/> )
+    return ( <ListingLoader count={12}/> )
   }
 
   if(isEmpty) {
@@ -157,6 +160,7 @@ const Home = ({searchParams}: HomeProps) => {
                 currentUser={user}
                 key={listing.id}
                 data={listing}
+                hoverAction={setHoveredListingId}
               />
             })}
         </div>
@@ -164,9 +168,9 @@ const Home = ({searchParams}: HomeProps) => {
     </div>
 
  {isLoaded && mapCenter.lat && mapCenter.lng ? (   
-    <div className="fixed top-24 right-0 md:w-2/5 h-screen hidden lg:block">
+        <div className="sticky -mb-20 mt-16 top-[175px] right-0 md:w-2/5 hidden lg:block" style={{ height: `calc(100vh - 175px)` }}>
         <GoogleMap
-          mapContainerStyle={{ width: '100%', height: '90vh' }}
+          mapContainerStyle={{ width: '100%', height: '100%' }}
           center={mapCenter}
           zoom={6}
           onBoundsChanged={handleBoundsChanged}
@@ -188,7 +192,11 @@ const Home = ({searchParams}: HomeProps) => {
               <ListingMapMenu data={listing} user={user} onClose={handleClosePopup}/>
            </div>
             }
-              <MapMarker isActive={listingId === listing.id} listing={listing} onClick={() => handleMarkerClick(listing)} />
+              <MapMarker 
+                isActive={listingId === listing.id || hoveredListingId === listing.id} 
+                listing={listing} 
+                onClick={() => handleMarkerClick(listing)} 
+              />
           </div>
 
         </>

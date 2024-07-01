@@ -50,16 +50,10 @@ Follow the instructions to get credentials for cloudinary: [Cloudinary generate 
    NEXT_PUBLIC_LOADING_TIME=1000
 
    # keep it ExpressSocket if your connecting with express else LaravelPusher if your connecting with Laravel
-   NEXT_PUBLIC_PUSHER_SOCKET_TYPE="ExpressSocket"
-
-   # Optional if using laravel has a backend
-   NEXT_PUBLIC_PUSHER_APP_ID="..."
+   NEXT_PUBLIC_SOCKET_TYPE="ExpressSocket"
 
    # Optional if using laravel has a backend
    NEXT_PUBLIC_PUSHER_APP_KEY="...."
-
-   # Optional if using laravel has a backend
-   NEXT_PUBLIC_PUSHER_APP_SECRET="...."
 
    # Optional if using laravel has a backend
    NEXT_PUBLIC_PUSHER_APP_CLUSTER="..."
